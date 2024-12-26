@@ -1,7 +1,9 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
+* {
+  user-select: auto;
+}
 :root {
   --background: #ffffff;
   --foreground: #171717;
