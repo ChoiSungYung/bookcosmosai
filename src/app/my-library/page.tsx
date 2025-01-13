@@ -1,7 +1,6 @@
 import { createClient } from "@/utils/supabase/server";
 import { redirect } from "next/navigation";
 import LibraryHeader from "@/app/components/library/LibraryHeader";
-import WorksList from "@/app/components/library/WorksList";
 import LibraryStats from "@/app/components/library/LibraryStats";
 
 interface Work {
@@ -66,7 +65,6 @@ export default async function MyLibrary() {
     <div className="container mx-auto px-4 py-8">
       <LibraryHeader library={library} />
       <LibraryStats library={library} />
-      <WorksList works={works || []} isOwner={true} />
     </div>
   );
 }
