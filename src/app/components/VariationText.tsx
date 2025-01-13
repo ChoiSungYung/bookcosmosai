@@ -68,7 +68,7 @@ export default function VariationText({
             <div
               className="whitespace-pre-wrap"
               dangerouslySetInnerHTML={{
-                __html: replaceNewlinesWithBr(originalText),
+                __html: replaceNewlinesWithBr(variationText),
               }}
             />
           </div>
