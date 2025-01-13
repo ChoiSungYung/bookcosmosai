@@ -2,7 +2,12 @@
 
 import { createClient } from "@/utils/supabase/client";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, FormEvent, KeyboardEvent } from "react";
+import dynamic from "next/dynamic";
+
+// ReactQuill을 동적 import (SSR 비활성화)
+const ReactQuill = dynamic(() => import("react-quill"), { ssr: false });
+import "react-quill/dist/quill.snow.css"; // 기본 테마
 
 interface Work {
   id: number;
@@ -30,25 +35,54 @@ interface Props {
   libraries: Library[];
 }
 
+// ReactQuill 모듈/포맷 설정
+const quillModules = {
+  toolbar: [
+    [{ header: [1, 2, 3, false] }],
+    ["bold", "italic", "underline", "strike"],
+    [{ color: [] }, { background: [] }],
+    [{ align: [] }],
+    ["clean"],
+  ],
+};
+const quillFormats = [
+  "header",
+  "bold",
+  "italic",
+  "underline",
+  "strike",
+  "color",
+  "background",
+  "align",
+];
+
 export default function EditWorkForm({ initialWork, libraries }: Props) {
   const router = useRouter();
   const [saving, setSaving] = useState(false);
   const [themeInput, setThemeInput] = useState("");
+
+  // 원래 work 상태
   const [work, setWork] = useState({
     ...initialWork,
     title: initialWork.title || "",
     genre: initialWork.genre || "",
     description: initialWork.description || "",
     prompt: initialWork.prompt || "",
-    original_text: initialWork.original_text || "",
-    variation_prompt: initialWork.variation_prompt || "",
-    variation_text: initialWork.variation_text || "",
     is_public: initialWork.is_public || false,
     status: initialWork.status || "draft",
     library_id: initialWork.library_id || "",
     themes: initialWork.themes || [],
     cover_url: initialWork.cover_url || null,
   });
+
+  // Quill 내용은 별도의 로컬 상태로 관리
+  const [localOriginalText, setLocalOriginalText] = useState(
+    initialWork.original_text || ""
+  );
+  const [localVariationText, setLocalVariationText] = useState(
+    initialWork.variation_text || ""
+  );
+
   const [coverFile, setCoverFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [message, setMessage] = useState<string>("");
@@ -71,6 +105,7 @@ export default function EditWorkForm({ initialWork, libraries }: Props) {
     { value: "기타", label: "기타" },
   ];
 
+  // 표지 이미지 선택
   const handleCoverSelection = (file: File | null) => {
     if (file) {
       setCoverFile(file);
@@ -81,7 +116,8 @@ export default function EditWorkForm({ initialWork, libraries }: Props) {
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  // "저장" 시점에만 Quill 내용을 work에 반영
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setSaving(true);
     setMessage("");
@@ -90,15 +126,12 @@ export default function EditWorkForm({ initialWork, libraries }: Props) {
       const supabase = createClient();
       let cover_url = work.cover_url;
 
+      // 커버 이미지 업로드 로직 (기존 로직 복사)
       if (coverFile) {
         try {
-          // 파일 크기 체크
           if (coverFile.size > 5 * 1024 * 1024) {
-            // 5MB
             throw new Error("파일 크기는 5MB를 초과할 수 없습니다.");
           }
-
-          // 파일 타입 체크
           if (!coverFile.type.startsWith("image/")) {
             throw new Error("이미지 파일만 업로드 가능합니다.");
           }
@@ -156,7 +189,7 @@ export default function EditWorkForm({ initialWork, libraries }: Props) {
         }
       }
 
-      // 작품 정보 업데이트
+      // DB 업데이트 시점: localOriginalText / localVariationText 반영
       const { error: updateError } = await supabase
         .from("ai_works")
         .update({
@@ -164,9 +197,9 @@ export default function EditWorkForm({ initialWork, libraries }: Props) {
           genre: work.genre || null,
           description: work.description || null,
           prompt: work.prompt || null,
-          original_text: work.original_text || null,
+          original_text: localOriginalText || null,
           variation_prompt: work.variation_prompt || null,
-          variation_text: work.variation_text || null,
+          variation_text: localVariationText || null,
           is_public: work.is_public,
           status: work.status,
           library_id: work.library_id || null,
@@ -191,30 +224,33 @@ export default function EditWorkForm({ initialWork, libraries }: Props) {
     }
   };
 
-  const handleThemeKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+  // 테마 입력
+  const handleThemeKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter") {
       e.preventDefault();
       if (themeInput.trim()) {
-        setWork({
-          ...work,
-          themes: [...(work.themes || []), themeInput.trim()],
-        });
+        setWork((prev) => ({
+          ...prev,
+          themes: [...(prev.themes || []), themeInput.trim()],
+        }));
         setThemeInput("");
       }
     }
   };
 
+  // 테마 제거
   const removeTheme = (themeToRemove: string) => {
-    setWork({
-      ...work,
-      themes: (work.themes || []).filter((theme) => theme !== themeToRemove),
-    });
+    setWork((prev) => ({
+      ...prev,
+      themes: (prev.themes || []).filter((theme) => theme !== themeToRemove),
+    }));
   };
 
   return (
     <div className="min-h-screen flex justify-center bg-gray-50">
       <div className="w-full max-w-4xl px-4 py-8">
         <h1 className="text-2xl font-bold mb-8 text-center">작품 수정</h1>
+
         {message && (
           <div
             className={`mb-4 p-4 rounded ${
@@ -226,8 +262,10 @@ export default function EditWorkForm({ initialWork, libraries }: Props) {
             {message}
           </div>
         )}
+
         <div className="bg-white shadow-md rounded-lg p-6">
           <form onSubmit={handleSubmit} className="max-w-2xl">
+            {/* 제목 */}
             <div className="mb-4">
               <label className="block text-gray-700 text-sm font-bold mb-2">
                 제목
@@ -241,6 +279,7 @@ export default function EditWorkForm({ initialWork, libraries }: Props) {
               />
             </div>
 
+            {/* 장르 */}
             <div className="mb-4">
               <label className="block text-gray-700 text-sm font-bold mb-2">
                 장르
@@ -259,6 +298,7 @@ export default function EditWorkForm({ initialWork, libraries }: Props) {
               </select>
             </div>
 
+            {/* 설명 */}
             <div className="mb-4">
               <label className="block text-gray-700 text-sm font-bold mb-2">
                 설명
@@ -269,10 +309,11 @@ export default function EditWorkForm({ initialWork, libraries }: Props) {
                   setWork({ ...work, description: e.target.value })
                 }
                 className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                rows={3}
+                rows={8}
               />
             </div>
 
+            {/* 프롬프트 */}
             <div className="mb-4">
               <label className="block text-gray-700 text-sm font-bold mb-2">
                 프롬프트
@@ -281,26 +322,28 @@ export default function EditWorkForm({ initialWork, libraries }: Props) {
                 value={work.prompt || ""}
                 onChange={(e) => setWork({ ...work, prompt: e.target.value })}
                 className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                rows={3}
+                rows={8}
               />
             </div>
 
+            {/* 본문 (ReactQuill) */}
             <div className="mb-4">
-              <label className="block text-gray-700 text-sm font-bold mb-2">
+              <label className="block text-gray-700 text-sm font-bold mt-2 mb-2">
                 본문
               </label>
-              <textarea
-                value={work.original_text || ""}
-                onChange={(e) =>
-                  setWork({ ...work, original_text: e.target.value })
-                }
-                className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                rows={10}
+              <ReactQuill
+                value={localOriginalText}
+                onChange={setLocalOriginalText}
+                modules={quillModules}
+                formats={quillFormats}
+                theme="snow"
+                style={{ height: 200, marginBottom: 100 }}
               />
             </div>
 
+            {/* 변주 프롬프트 */}
             <div className="mb-4">
-              <label className="block text-gray-700 text-sm font-bold mb-2">
+              <label className="block text-gray-700 text-sm font-bold mt-2 mb-2">
                 변주 프롬프트
               </label>
               <textarea
@@ -309,24 +352,26 @@ export default function EditWorkForm({ initialWork, libraries }: Props) {
                   setWork({ ...work, variation_prompt: e.target.value })
                 }
                 className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                rows={3}
+                rows={8}
               />
             </div>
 
+            {/* 변주 텍스트 (ReactQuill) */}
             <div className="mb-4">
               <label className="block text-gray-700 text-sm font-bold mb-2">
                 변주 텍스트
               </label>
-              <textarea
-                value={work.variation_text || ""}
-                onChange={(e) =>
-                  setWork({ ...work, variation_text: e.target.value })
-                }
-                className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                rows={10}
+              <ReactQuill
+                value={localVariationText}
+                onChange={setLocalVariationText}
+                modules={quillModules}
+                formats={quillFormats}
+                theme="snow"
+                style={{ height: 200, marginBottom: 100 }}
               />
             </div>
 
+            {/* 라이브러리 */}
             <div className="mb-4">
               <label className="block text-gray-700 text-sm font-bold mb-2">
                 라이브러리
@@ -347,6 +392,7 @@ export default function EditWorkForm({ initialWork, libraries }: Props) {
               </select>
             </div>
 
+            {/* 공개 여부 */}
             <div className="mb-4">
               <label className="flex items-center">
                 <input
@@ -361,6 +407,7 @@ export default function EditWorkForm({ initialWork, libraries }: Props) {
               </label>
             </div>
 
+            {/* 상태 */}
             <div className="mb-4">
               <label className="block text-gray-700 text-sm font-bold mb-2">
                 상태
@@ -375,6 +422,7 @@ export default function EditWorkForm({ initialWork, libraries }: Props) {
               </select>
             </div>
 
+            {/* 테마 */}
             <div className="mb-4">
               <label className="block text-gray-700 text-sm font-bold mb-2">
                 테마
@@ -408,6 +456,7 @@ export default function EditWorkForm({ initialWork, libraries }: Props) {
               </div>
             </div>
 
+            {/* 표지 이미지 */}
             <div className="mb-4">
               <label className="block text-gray-700 text-sm font-bold mb-2">
                 표지 이미지
@@ -431,6 +480,7 @@ export default function EditWorkForm({ initialWork, libraries }: Props) {
               )}
             </div>
 
+            {/* 버튼들 */}
             <div className="flex justify-end">
               <button
                 type="button"

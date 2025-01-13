@@ -1,11 +1,17 @@
 "use client";
 
 import { useState } from "react";
+
 interface VariationTextProps {
   prompt: string; // 원본 프롬프트
-  originalText: string; // 원본 텍스트
+  originalText: string; // 원본 텍스트(HTML 형태)
   variationPrompt: string; // 변주 프롬프트
-  variationText: string; // 변주 텍스트
+  variationText: string; // 변주 텍스트(HTML 형태)
+}
+
+function replaceNewlinesWithBr(text: string) {
+  // \n (LF), \r\n (CRLF) 모두 처리
+  return text.replace(/\r?\n/g, "<br>");
 }
 
 export default function VariationText({
@@ -31,10 +37,16 @@ export default function VariationText({
           {prompt}
         </div>
       )}
-      {/* 원본 텍스트 */}
+
+      {/* 원본 텍스트 (dangerouslySetInnerHTML) */}
       <div className="mb-6">
-        <h2 className="text-xl font-semibold mb-">작품 본문</h2>
-        <p className="whitespace-pre-wrap">{originalText}</p>
+        <h2 className="text-xl font-semibold mb-6">작품 본문</h2>
+        <div
+          className="whitespace-pre-wrap"
+          dangerouslySetInnerHTML={{
+            __html: replaceNewlinesWithBr(originalText),
+          }}
+        />
       </div>
 
       {/* 변주 프롬프트 토글 버튼 */}
@@ -52,8 +64,13 @@ export default function VariationText({
             {variationPrompt}
           </div>
           <div className="my-6">
-            <h2 className="text-xl font-semibold mb-2">재창작 본문</h2>
-            <p className="whitespace-pre-wrap">{variationText}</p>
+            <h2 className="text-xl font-semibold mb-6">재창작 본문</h2>
+            <div
+              className="whitespace-pre-wrap"
+              dangerouslySetInnerHTML={{
+                __html: replaceNewlinesWithBr(originalText),
+              }}
+            />
           </div>
         </div>
       )}
