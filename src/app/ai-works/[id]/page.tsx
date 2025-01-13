@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import LikeButton from "@/app/components/LikeButton";
 import CommentSection from "@/app/components/CommentSection";
 import ViewCounter from "@/app/components/ViewCounter";
+import VariationText from "@/app/components/VariationText";
 
 interface Work {
   id: number;
@@ -14,6 +15,10 @@ interface Work {
   themes: string[];
   view_count: number;
   like_count: number;
+  prompt: string;
+  original_text: string;
+  variation_prompt: string;
+  variation_text: string;
   profiles?: {
     full_name: string;
     bio: string;
@@ -23,8 +28,9 @@ interface Work {
 export default async function WorkDetail({
   params,
 }: {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }) {
+  const { id } = await params;
   const supabase = await createClient();
 
   const { data: work } = await supabase
@@ -38,7 +44,7 @@ export default async function WorkDetail({
       )
     `
     )
-    .eq("id", params.id)
+    .eq("id", id)
     .single();
 
   if (!work) {
@@ -54,11 +60,11 @@ export default async function WorkDetail({
     .single();
 
   if (!existingView) {
-    await supabase.rpc("increment_ai_work_view_count", { work_id: work.id });
+    await supabase.rpc("increment_view_count", { work_id: work.id });
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="container mx-auto px-4 py-20">
       <article className="max-w-4xl mx-auto">
         <header className="mb-8">
           <h1 className="text-3xl font-bold mb-4">{work.title}</h1>
@@ -82,11 +88,18 @@ export default async function WorkDetail({
               className="w-full max-h-96 object-cover rounded-lg mb-8"
             />
           )}
+
           <div className="bg-gray-50 p-6 rounded-lg mb-8">
             <h2 className="text-xl font-semibold mb-4">작품 소개</h2>
             <p>{work.description}</p>
           </div>
-          <div className="whitespace-pre-wrap">{work.content}</div>
+
+          <VariationText
+            prompt={work.prompt}
+            originalText={work.original_text}
+            variationPrompt={work.variation_prompt}
+            variationText={work.variation_text}
+          />
         </div>
 
         {work.themes && work.themes.length > 0 && (
