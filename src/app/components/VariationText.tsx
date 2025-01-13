@@ -23,6 +23,9 @@ export default function VariationText({
   const [showOriginalPrompt, setShowOriginalPrompt] = useState(false);
   const [showVariationPrompt, setShowVariationPrompt] = useState(false);
 
+  // variationPrompt가 실제로 비어 있지 않은지 판별 (공백 제외)
+  const hasVariationPrompt = variationPrompt?.trim().length > 0;
+
   return (
     <div>
       {/* 원본 프롬프트 토글 버튼 */}
@@ -38,7 +41,7 @@ export default function VariationText({
         </div>
       )}
 
-      {/* 원본 텍스트 (dangerouslySetInnerHTML) */}
+      {/* 원본 텍스트 */}
       <div className="mb-6">
         <h2 className="text-xl font-semibold mb-6">작품 본문</h2>
         <div
@@ -49,30 +52,35 @@ export default function VariationText({
         />
       </div>
 
-      {/* 변주 프롬프트 토글 버튼 */}
-      <button
-        onClick={() => setShowVariationPrompt(!showVariationPrompt)}
-        className="px-3 py-2 rounded bg-blue-100 text-blue-800 font-medium"
-      >
-        {showVariationPrompt
-          ? "재창작 프롬프트 숨기기"
-          : "재창작 프롬프트 보기"}
-      </button>
-      {showVariationPrompt && (
-        <div>
-          <div className="bg-blue-50 p-4 rounded mt-2 whitespace-pre-wrap">
-            {variationPrompt}
-          </div>
-          <div className="my-6">
-            <h2 className="text-xl font-semibold mb-6">재창작 본문</h2>
-            <div
-              className="whitespace-pre-wrap"
-              dangerouslySetInnerHTML={{
-                __html: replaceNewlinesWithBr(variationText),
-              }}
-            />
-          </div>
-        </div>
+      {/* 변주(재창작) 프롬프트/본문 섹션 */}
+      {hasVariationPrompt && (
+        <>
+          <button
+            onClick={() => setShowVariationPrompt(!showVariationPrompt)}
+            className="px-3 py-2 rounded bg-blue-100 text-blue-800 font-medium"
+          >
+            {showVariationPrompt
+              ? "재창작 프롬프트 숨기기"
+              : "재창작 프롬프트 보기"}
+          </button>
+
+          {showVariationPrompt && (
+            <div>
+              <div className="bg-blue-50 p-4 rounded mt-2 whitespace-pre-wrap">
+                {variationPrompt}
+              </div>
+              <div className="my-6">
+                <h2 className="text-xl font-semibold mb-6">재창작 본문</h2>
+                <div
+                  className="whitespace-pre-wrap"
+                  dangerouslySetInnerHTML={{
+                    __html: replaceNewlinesWithBr(variationText),
+                  }}
+                />
+              </div>
+            </div>
+          )}
+        </>
       )}
     </div>
   );
