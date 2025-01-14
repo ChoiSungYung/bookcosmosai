@@ -9,7 +9,9 @@ interface VariationTextProps {
   variationText: string; // 변주 텍스트(HTML 형태)
 }
 
-function replaceNewlinesWithBr(text: string) {
+function replaceNewlinesWithBr(text: string | null) {
+  // null이나 undefined인 경우 빈 문자열 반환
+  if (!text) return "";
   // \n (LF), \r\n (CRLF) 모두 처리
   return text.replace(/\r?\n/g, "<br>");
 }
