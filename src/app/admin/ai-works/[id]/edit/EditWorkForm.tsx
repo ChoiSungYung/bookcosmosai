@@ -240,18 +240,17 @@ export default function EditWorkForm({ initialWork, libraries }: Props) {
     }
   };
 
-  // 테마 입력
-  const handleThemeKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter") {
-      e.preventDefault();
-      if (themeInput.trim()) {
-        setWork((prev) => ({
-          ...prev,
-          themes: [...(prev.themes || []), themeInput.trim()],
-        }));
-        setThemeInput("");
-      }
-    }
+  // 테마 입력 핸들러 수정
+  const handleThemeInput = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const themes = e.target.value
+      .split("\n")
+      .map((theme) => theme.trim())
+      .filter((theme) => theme.length > 0);
+
+    setWork((prev) => ({
+      ...prev,
+      themes: themes,
+    }));
   };
 
   // 테마 제거
@@ -447,17 +446,14 @@ export default function EditWorkForm({ initialWork, libraries }: Props) {
               <label className="block text-gray-700 text-sm font-bold mb-2">
                 테마
               </label>
-              <div className="mb-2">
-                <input
-                  type="text"
-                  value={themeInput}
-                  onChange={(e) => setThemeInput(e.target.value)}
-                  onKeyDown={handleThemeKeyDown}
-                  placeholder="테마를 입력하세요. Enter를 누르세요"
-                  className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                />
-              </div>
-              <div className="flex flex-wrap gap-2">
+              <textarea
+                value={work.themes?.join("\n") || ""}
+                onChange={handleThemeInput}
+                placeholder="테마를 입력하세요. 각 줄에 하나의 테마를 입력하세요."
+                className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                rows={5}
+              />
+              <div className="flex flex-wrap gap-2 mt-2">
                 {work.themes?.map((theme, index) => (
                   <span
                     key={index}

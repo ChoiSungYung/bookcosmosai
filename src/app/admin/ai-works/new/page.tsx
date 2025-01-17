@@ -138,6 +138,19 @@ export default function NewWorkPage() {
     }
   };
 
+  // 테마 입력 핸들러 수정
+  const handleThemeInput = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const themes = e.target.value
+      .split("\n")
+      .map((theme) => theme.trim())
+      .filter((theme) => theme.length > 0);
+
+    setWork((prev) => ({
+      ...prev,
+      themes: themes,
+    }));
+  };
+
   // 테마 제거
   const removeTheme = (themeToRemove: string) => {
     setWork((prev) => ({
@@ -272,7 +285,6 @@ export default function NewWorkPage() {
                 required
               />
             </div>
-
             {/* 장르 */}
             <div className="mb-4">
               <label className="block text-gray-700 text-sm font-bold mb-2">
@@ -291,23 +303,20 @@ export default function NewWorkPage() {
                 ))}
               </select>
             </div>
-
+            // JSX 부분 수정
             {/* 테마 */}
             <div className="mb-4">
               <label className="block text-gray-700 text-sm font-bold mb-2">
                 테마
               </label>
-              <div className="mb-2">
-                <input
-                  type="text"
-                  value={themeInput}
-                  onChange={(e) => setThemeInput(e.target.value)}
-                  onKeyDown={handleThemeKeyDown}
-                  placeholder="테마를 입력하세요. Enter를 누르세요"
-                  className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                />
-              </div>
-              <div className="flex flex-wrap gap-2">
+              <textarea
+                value={work.themes?.join("\n") || ""}
+                onChange={handleThemeInput}
+                placeholder="테마를 입력하세요. 각 줄에 하나의 테마를 입력하세요."
+                className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                rows={5}
+              />
+              <div className="flex flex-wrap gap-2 mt-2">
                 {work.themes?.map((theme, index) => (
                   <span
                     key={index}
@@ -325,7 +334,6 @@ export default function NewWorkPage() {
                 ))}
               </div>
             </div>
-
             {/* 설명 */}
             <div className="mb-4">
               <label className="block text-gray-700 text-sm font-bold mb-2">
@@ -340,7 +348,6 @@ export default function NewWorkPage() {
                 rows={8}
               />
             </div>
-
             {/* 프롬프트 */}
             <div className="mb-4">
               <label className="block text-gray-700 text-sm font-bold mb-2">
@@ -353,7 +360,6 @@ export default function NewWorkPage() {
                 rows={8}
               />
             </div>
-
             {/* AI 소설 생성 버튼 */}
             <div className="mb-4">
               <button
@@ -365,7 +371,6 @@ export default function NewWorkPage() {
                 {generating ? "생성 중..." : "AI 본문 생성"}
               </button>
             </div>
-
             {/* 본문 (ReactQuill) */}
             <div className="mb-4">
               <label className="block text-gray-700 text-sm font-bold mt-2 mb-2">
@@ -384,7 +389,6 @@ export default function NewWorkPage() {
                 className="prose max-w-none"
               />
             </div>
-
             {/* 변주 프롬프트 */}
             <div className="mb-4">
               <label className="block text-gray-700 text-sm font-bold mt-2 mb-2">
@@ -399,7 +403,6 @@ export default function NewWorkPage() {
                 rows={8}
               />
             </div>
-
             {/* 변주 텍스트 (ReactQuill) */}
             <div className="mb-4">
               <label className="block text-gray-700 text-sm font-bold mb-2">
@@ -414,7 +417,6 @@ export default function NewWorkPage() {
                 style={{ height: 200, marginBottom: 100 }}
               />
             </div>
-
             {/* 라이브러리 */}
             <div className="mb-4">
               <label className="block text-gray-700 text-sm font-bold mb-2">
@@ -435,7 +437,6 @@ export default function NewWorkPage() {
                 ))}
               </select>
             </div>
-
             {/* 공개 여부 */}
             <div className="mb-4">
               <label className="flex items-center">
@@ -450,7 +451,6 @@ export default function NewWorkPage() {
                 <span className="text-gray-700 text-sm font-bold">공개</span>
               </label>
             </div>
-
             {/* 상태 */}
             <div className="mb-4">
               <label className="block text-gray-700 text-sm font-bold mb-2">
@@ -465,7 +465,6 @@ export default function NewWorkPage() {
                 <option value="published">발행</option>
               </select>
             </div>
-
             {/* 표지 이미지 */}
             <div className="mb-4">
               <label className="block text-gray-700 text-sm font-bold mb-2">
@@ -489,7 +488,6 @@ export default function NewWorkPage() {
                 </div>
               )}
             </div>
-
             {/* 버튼들 */}
             <div className="flex justify-end">
               <button
