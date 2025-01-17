@@ -47,7 +47,7 @@ export default function VariationText({
       <div className="mb-6">
         <h2 className="text-xl font-semibold mb-6">작품 본문</h2>
         <div
-          className="whitespace-pre-wrap"
+          className="whitespace-pre-wrap ql-editor"
           dangerouslySetInnerHTML={{
             __html: replaceNewlinesWithBr(originalText),
           }}
@@ -74,7 +74,7 @@ export default function VariationText({
               <div className="my-6">
                 <h2 className="text-xl font-semibold mb-6">재창작 본문</h2>
                 <div
-                  className="whitespace-pre-wrap"
+                  className="whitespace-pre-wrap ql-editor"
                   dangerouslySetInnerHTML={{
                     __html: replaceNewlinesWithBr(variationText),
                   }}

@@ -25,12 +25,14 @@ export default function NewWorkPage() {
   // Quill 설정
   const quillModules = {
     toolbar: [
-      [{ header: [1, 2, 3, false] }],
+      [{ header: [1, 2, 3, 4, 5, 6, false] }],
+      [{ size: ["small", false, "large", "huge"] }], // 글자 크기 옵션 추가
       ["bold", "italic", "underline", "strike"],
+      [{ color: [] }, { background: [] }], // 글자색, 배경색 옵션 추가
       [{ list: "ordered" }, { list: "bullet" }],
       [{ align: [] }],
-      [{ lineHeight: ["1.0", "1.2", "1.5", "2.0"] }],
       [{ indent: "-1" }, { indent: "+1" }],
+      [{ lineHeight: ["1.0", "1.2", "1.5", "2.0"] }],
       ["blockquote"],
       ["clean"],
     ],
@@ -38,15 +40,18 @@ export default function NewWorkPage() {
 
   const quillFormats = [
     "header",
+    "size",
     "bold",
     "italic",
     "underline",
     "strike",
+    "color",
+    "background",
     "list",
     "bullet",
     "align",
-    "lineHeight",
     "indent",
+    "lineHeight",
     "blockquote",
   ];
 
@@ -81,6 +86,11 @@ export default function NewWorkPage() {
     { value: "호러", label: "호러" },
     { value: "역사", label: "역사" },
     { value: "문학", label: "문학" },
+    { value: "인문사회", label: "인문사회" },
+    { value: "자기계발", label: "자기계발" },
+    { value: "경제경영", label: "경제경영" },
+    { value: "실용교양", label: "실용교양" },
+    { value: "자녀교육", label: "자녀교육" },
     { value: "아동", label: "아동" },
     { value: "청소년", label: "청소년" },
     { value: "전기", label: "전기" },
