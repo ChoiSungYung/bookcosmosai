@@ -20,7 +20,7 @@
 
   /* 제목 */
   h1, h2, h3, h4, h5, h6 {
-    @apply font-bold leading-tight mb-4;
+    @apply font-bold leading-tight mt-4 mb-4;
   }
 
   /* 특정 컨테이너의 텍스트 */
